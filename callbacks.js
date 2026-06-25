@@ -1,10 +1,9 @@
 const https = require("https");
 
-const province = "Rizal";
-const municipality = "Tanay";
+const province = "Cebu";
+const municipality = "Mandaue";
 
-const urlBarangay =
-  "https://demo.myruntime.com/website/fulfillmentClustersService/api/getPhilClusterOptions/myruntimeWeb?parentOption=Rizal&childOption=Tanay";
+const urlBarangay = `https://demo.myruntime.com/website/fulfillmentClustersService/api/getPhilClusterOptions/myruntimeWeb?parentOption=${province}&childOption=${municipality}`;
 
 https.get(urlBarangay, (res) => {
   let responseBody = "";

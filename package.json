@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/conxant0/barangayMiniProj#readme",
   "dependencies": {
+    "@fast-csv/format": "^5.0.7",
     "axios": "^1.18.1"
   }
 }
