@@ -22,7 +22,12 @@ https.get(urlBarangay, (res) => {
     ) {
       console.error("Invalid municipality for this province");
     } else {
-      console.log("Output:", parsedData.data);
+      const barangays = parsedData.data.map((name, index) => ({
+        id: index + 1,
+        name: name,
+        parentId: municipality,
+      }));
+      console.log("Output:", barangays);
     }
   });
 });
