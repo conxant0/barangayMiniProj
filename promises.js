@@ -37,7 +37,9 @@ axios
     } else if (
       apiError === "No sub options found for the specified category."
     ) {
-      console.error("Invalid municipality for this province");
+      console.error(
+        "No barangay options found for this province/municipality.",
+      );
     } else {
       console.error(error.message);
     }
