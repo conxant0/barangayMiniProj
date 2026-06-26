@@ -2,7 +2,7 @@ const axios = require("axios");
 const { format } = require("@fast-csv/format");
 const fs = require("fs");
 
-const province = "Rizal";
+const province = "Cebu";
 const municipality = "Lapu-Lapu";
 
 const urlBarangay = `https://demo.myruntime.com/website/fulfillmentClustersService/api/getPhilClusterOptions/myruntimeWeb?parentOption=${encodeURIComponent(province)}&childOption=${encodeURIComponent(municipality)}`;
@@ -11,9 +11,10 @@ const ws = fs.createWriteStream("barangay.csv");
 const csvStream = format({ headers: true });
 csvStream.pipe(ws);
 
-axios
-  .get(urlBarangay)
-  .then((response) => {
+async function main() {
+  try {
+    const response = await axios.get(urlBarangay);
+
     const apiError = response.data.error;
 
     if (apiError === "No cluster options found.") {
@@ -41,8 +42,7 @@ axios
     });
 
     csvStream.end();
-  })
-  .catch((error) => {
+  } catch (error) {
     if (error.response) {
       console.error("Request failed:", error.response.status);
       console.error(error.response.data);
@@ -51,4 +51,7 @@ axios
     }
 
     csvStream.end();
-  });
+  }
+}
+
+main();
