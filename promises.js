@@ -30,5 +30,17 @@ axios
     csvStream.end();
   })
   .catch((error) => {
-    console.error(error.message);
+    const apiError = error.response?.data?.error;
+
+    if (apiError === "No cluster options found.") {
+      console.error("Invalid province");
+    } else if (
+      apiError === "No sub options found for the specified category."
+    ) {
+      console.error("Invalid municipality for this province");
+    } else {
+      console.error(error.message);
+    }
+
+    csvStream.end();
   });

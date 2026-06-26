@@ -14,6 +14,15 @@ https.get(urlBarangay, (res) => {
 
   res.on("end", () => {
     const parsedData = JSON.parse(responseBody);
-    console.log("Output: ", parsedData.data);
+
+    if (parsedData.error === "No cluster options found.") {
+      console.error("Invalid province");
+    } else if (
+      parsedData.error === "No sub options found for the specified category."
+    ) {
+      console.error("Invalid municipality for this province");
+    } else {
+      console.log("Output:", parsedData.data);
+    }
   });
 });
