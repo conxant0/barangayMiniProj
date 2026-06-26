@@ -14,34 +14,40 @@ csvStream.pipe(ws);
 axios
   .get(urlBarangay)
   .then((response) => {
-    const barangays = response.data.data.map((name, index) => ({
-      id: index + 1,
-      name: name,
-      parentId: municipality,
-    }));
-
-    barangays.forEach(({ id, name, parentId }) => {
-      csvStream.write({
-        id,
-        name,
-        parentId,
-      });
-    });
-    csvStream.end();
-  })
-  .catch((error) => {
-    const apiError = error.response?.data?.error;
+    const apiError = response.data.error;
 
     if (apiError === "No cluster options found.") {
       console.error("Invalid province");
-    } else if (
-      apiError === "No sub options found for the specified category."
-    ) {
+      csvStream.end();
+      return;
+    }
+
+    if (apiError === "No sub options found for the specified category.") {
       console.error(
         "No barangay options found for this province/municipality.",
       );
+      csvStream.end();
+      return;
+    }
+
+    const barangays = response.data.data.map((name, index) => ({
+      id: index + 1,
+      name,
+      parentId: municipality,
+    }));
+
+    barangays.forEach((barangay) => {
+      csvStream.write(barangay);
+    });
+
+    csvStream.end();
+  })
+  .catch((error) => {
+    if (error.response) {
+      console.error("Request failed:", error.response.status);
+      console.error(error.response.data);
     } else {
-      console.error(error.message);
+      console.error("Request failed:", error.message);
     }
 
     csvStream.end();
