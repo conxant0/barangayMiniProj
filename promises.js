@@ -5,7 +5,7 @@ const fs = require("fs");
 const province = "Rizal";
 const municipality = "Cebu";
 
-const urlBarangay = `https://demo.myruntime.com/website/fulfillmentClustersService/api/getPhilClusterOptions/myruntimeWeb?parentOption=${province}&childOption=${municipality}`;
+const urlBarangay = `https://demo.myruntime.com/website/fulfillmentClustersService/api/getPhilClusterOptions/myruntimeWeb?parentOption=${encodeURIComponent(province)}&childOption=${encodeURIComponent(municipality)}`;
 
 const ws = fs.createWriteStream("barangay.csv");
 const csvStream = format({ headers: true });
