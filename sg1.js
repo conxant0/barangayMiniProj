@@ -38,14 +38,30 @@ async function getBarangays(province, municipality, skipped) {
 
 async function main() {
   const municipalities = await getMunicipalities(province);
+  if (!municipalities) {
+    console.error("Invalid Province");
+    csvStream.end();
+    return;
+  }
   let skipped = [];
+
+  let id = 1;
 
   for (const municipality of municipalities) {
     const barangays = await getBarangays(province, municipality, skipped);
 
-    console.log(municipality, barangays);
+    barangays.forEach((barangay) => {
+      csvStream.write({
+        id: id++,
+        name: barangay,
+        parentId: municipality,
+      });
+    });
   }
+  csvStream.end();
   console.log("Skipped municipalities: ", skipped);
+
+  console.log("Completed Barangay Crawl!");
 }
 
 main();
