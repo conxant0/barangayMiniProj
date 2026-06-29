@@ -2,6 +2,8 @@ const axios = require("axios");
 const { format } = require("@fast-csv/format");
 const fs = require("fs");
 
+const urlProvince = `https://demo.myruntime.com/website/fulfillmentClustersService/api/getPhilClusters/myruntimeWeb`;
+
 async function getMunicipalities(province) {
   try {
     const response = await axios.get(urlProvince);
@@ -34,8 +36,6 @@ async function main() {
   csvStream.pipe(ws);
 
   const province = "Rizal";
-
-  const urlProvince = `https://demo.myruntime.com/website/fulfillmentClustersService/api/getPhilClusters/myruntimeWeb`;
 
   const municipalities = await getMunicipalities(province);
   if (!municipalities) {
