@@ -1,6 +1,5 @@
 const axios = require("axios");
-const { format } = require("@fast-csv/format");
-const fs = require("fs");
+const { connectToDB, client } = require("./db");
 
 const urlProvince = `https://demo.myruntime.com/website/fulfillmentClustersService/api/getPhilClusters/myruntimeWeb`;
 
@@ -31,38 +30,42 @@ async function getBarangays(province, municipality, skipped) {
 }
 
 async function main() {
-  const ws = fs.createWriteStream("barangay.csv");
-  const csvStream = format({ headers: true });
-  csvStream.pipe(ws);
+  try {
+    const db = await connectToDB();
+    const barangayCollection = db.collection("barangaysSG1");
+    const province = "Rizal";
 
-  const province = "Rizal";
+    const municipalities = await getMunicipalities(province);
+    if (!municipalities) {
+      console.error("Invalid Province");
+      return;
+    }
 
-  const municipalities = await getMunicipalities(province);
-  if (!municipalities) {
-    console.error("Invalid Province");
-    csvStream.end();
-    return;
-  }
+    let skipped = [];
 
-  let skipped = [];
+    let id = 1;
 
-  let id = 1;
+    for (const municipality of municipalities) {
+      const barangays = await getBarangays(province, municipality, skipped);
 
-  for (const municipality of municipalities) {
-    const barangays = await getBarangays(province, municipality, skipped);
-
-    barangays.forEach((barangay) => {
-      csvStream.write({
+      const docs = barangays.map((barangay) => ({
         id: id++,
         name: barangay,
         parentId: municipality,
-      });
-    });
-  }
-  csvStream.end();
-  console.log("Skipped locations: ", skipped);
+      }));
 
-  console.log("Completed Barangay Crawl!");
+      if (docs.length > 0) {
+        await barangayCollection.insertMany(docs);
+      }
+    }
+    console.log("Skipped locations: ", skipped);
+
+    console.log("Completed Barangay Crawl!");
+  } catch (error) {
+    console.error(error);
+  } finally {
+    await client.close();
+  }
 }
 
 main();
