@@ -1,6 +1,5 @@
 const axios = require("axios");
-const { format } = require("@fast-csv/format");
-const fs = require("fs");
+const { connectToDB, client } = require("./db.js");
 
 const urlProvince = `https://demo.myruntime.com/website/fulfillmentClustersService/api/getPhilClusters/myruntimeWeb`;
 
@@ -40,35 +39,60 @@ async function getBarangays(province, municipality, skipped) {
 }
 
 async function main() {
-  const ws = fs.createWriteStream("barangay.csv");
-  const csvStream = format({ headers: true });
-  csvStream.pipe(ws);
+  try {
+    const db = await connectToDB();
+    const barangayCollection = db.collection("barangaySG2");
 
-  let skipped = [];
+    await barangayCollection.createIndex(
+      {
+        parentId: 1,
+        name: 1,
+      },
+      {
+        unique: true,
+      },
+    );
 
-  let id = 1;
+    let skipped = [];
 
-  const provinces = await getProvinces();
+    let id = 1;
 
-  for (const province of provinces) {
-    const municipalities = await getMunicipalities(province);
-    for (const municipality of municipalities) {
-      const barangays = await getBarangays(province, municipality, skipped);
+    const provinces = await getProvinces();
 
-      barangays.forEach((barangay) => {
-        csvStream.write({
+    for (const province of provinces) {
+      const municipalities = await getMunicipalities(province);
+      for (const municipality of municipalities) {
+        const barangays = await getBarangays(province, municipality, skipped);
+
+        const docs = barangays.map((barangay) => ({
           id: id++,
           name: barangay,
           parentId: `${province}/${municipality}`,
-        });
-      });
+        }));
+
+        try {
+          if (docs.length > 0) {
+            await barangayCollection.insertMany(docs, {
+              ordered: false,
+            });
+          }
+        } catch (error) {
+          if (error.code === 11000) {
+            console.log(`Duplicates found in ${municipality}.`);
+          } else {
+            throw error;
+          }
+        }
+      }
     }
+    console.log("Skipped locations: ", skipped);
+
+    console.log("Completed Barangay Crawl!");
+  } catch (error) {
+    console.error(error);
+  } finally {
+    await client.close();
   }
-
-  csvStream.end();
-  console.log("Skipped locations: ", skipped);
-
-  console.log("Completed Barangay Crawl!");
 }
 
 main();

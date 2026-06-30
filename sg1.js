@@ -35,6 +35,16 @@ async function main() {
     const barangayCollection = db.collection("barangaysSG1");
     const province = "Rizal";
 
+    await barangayCollection.createIndex(
+      {
+        parentId: 1,
+        name: 1,
+      },
+      {
+        unique: true,
+      },
+    );
+
     const municipalities = await getMunicipalities(province);
     if (!municipalities) {
       console.error("Invalid Province");
@@ -54,8 +64,18 @@ async function main() {
         parentId: municipality,
       }));
 
-      if (docs.length > 0) {
-        await barangayCollection.insertMany(docs);
+      try {
+        if (docs.length > 0) {
+          await barangayCollection.insertMany(docs, {
+            ordered: false,
+          });
+        }
+      } catch (error) {
+        if (error.code === 11000) {
+          console.log(`Duplicates found in ${municipality}.`);
+        } else {
+          throw error;
+        }
       }
     }
     console.log("Skipped locations: ", skipped);
