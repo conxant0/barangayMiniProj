@@ -94,7 +94,7 @@ async function main() {
         currentBatch.push(barangay);
       }
 
-      if (currentBatch.length > 0) {
+      if (currentBatch.length) {
         try {
           await barangayCollection.insertMany(currentBatch, {
             ordered: false,
