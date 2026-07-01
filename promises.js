@@ -19,28 +19,26 @@ axios
     if (apiError === "No cluster options found.") {
       console.error("Invalid province");
       csvStream.end();
-      return;
-    }
-
-    if (apiError === "No sub options found for the specified category.") {
+    } else if (
+      apiError === "No sub options found for the specified category."
+    ) {
       console.error(
         "No barangay options found for this province/municipality.",
       );
       csvStream.end();
-      return;
+    } else {
+      const barangays = response.data.data.map((name, index) => ({
+        id: index + 1,
+        name,
+        parentId: municipality,
+      }));
+
+      barangays.forEach((barangay) => {
+        csvStream.write(barangay);
+      });
+
+      csvStream.end();
     }
-
-    const barangays = response.data.data.map((name, index) => ({
-      id: index + 1,
-      name,
-      parentId: municipality,
-    }));
-
-    barangays.forEach((barangay) => {
-      csvStream.write(barangay);
-    });
-
-    csvStream.end();
   })
   .catch((error) => {
     if (error.response) {

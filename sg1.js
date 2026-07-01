@@ -48,39 +48,38 @@ async function main() {
     const municipalities = await getMunicipalities(province);
     if (!municipalities) {
       console.error("Invalid Province");
-      return;
-    }
+    } else {
+      let skipped = [];
 
-    let skipped = [];
+      let id = 1;
 
-    let id = 1;
+      for (const municipality of municipalities) {
+        const barangays = await getBarangays(province, municipality, skipped);
 
-    for (const municipality of municipalities) {
-      const barangays = await getBarangays(province, municipality, skipped);
+        const docs = barangays.map((barangay) => ({
+          id: id++,
+          name: barangay,
+          parentId: municipality,
+        }));
 
-      const docs = barangays.map((barangay) => ({
-        id: id++,
-        name: barangay,
-        parentId: municipality,
-      }));
-
-      try {
-        if (docs.length > 0) {
-          await barangayCollection.insertMany(docs, {
-            ordered: false,
-          });
-        }
-      } catch (error) {
-        if (error.code === 11000) {
-          console.log(`Duplicates found in ${municipality}.`);
-        } else {
-          throw error;
+        try {
+          if (docs.length > 0) {
+            await barangayCollection.insertMany(docs, {
+              ordered: false,
+            });
+          }
+        } catch (error) {
+          if (error.code === 11000) {
+            console.log(`Duplicates found in ${municipality}.`);
+          } else {
+            throw error;
+          }
         }
       }
-    }
-    console.log("Skipped locations: ", skipped);
+      console.log("Skipped locations: ", skipped);
 
-    console.log("Completed Barangay Crawl!");
+      console.log("Completed Barangay Crawl!");
+    }
   } catch (error) {
     console.error(error);
   } finally {
