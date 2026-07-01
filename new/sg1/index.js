@@ -12,6 +12,18 @@ async function main() {
     const barangayCollection = db.collection("barangaysSG1");
     const province = "Rizal";
     const allBarangays = [];
+    const parentIds = new Map();
+    let nextParentId = 1;
+
+    function getParentId(provinceName, municipality) {
+      const key = `${provinceName}|${municipality}`;
+
+      if (!parentIds.has(key)) {
+        parentIds.set(key, nextParentId++);
+      }
+
+      return parentIds.get(key);
+    }
 
     await createBarangayIndex(barangayCollection);
 
@@ -25,11 +37,12 @@ async function main() {
 
       for (const municipality of municipalities) {
         const barangays = await getBarangays(province, municipality, skipped);
+        const parentId = getParentId(province, municipality);
 
         const docs = barangays.map((barangay) => ({
           id: id++,
           name: barangay,
-          parentId: municipality,
+          parentId,
         }));
 
         allBarangays.push(...docs);

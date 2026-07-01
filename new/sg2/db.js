@@ -28,8 +28,7 @@ async function insertBarangays(barangayCollection, allBarangays) {
         });
       } catch (error) {
         if (error.code === 11000) {
-          const municipality = currentParentId.split("/").pop();
-          console.log(`Duplicates found in ${municipality}.`);
+          console.log(`Duplicates found in parentId ${currentParentId}.`);
         } else {
           throw error;
         }
@@ -49,8 +48,7 @@ async function insertBarangays(barangayCollection, allBarangays) {
       });
     } catch (error) {
       if (error.code === 11000) {
-        const municipality = currentParentId.split("/").pop();
-        console.log(`Duplicates found in ${municipality}.`);
+        console.log(`Duplicates found in parentId ${currentParentId}.`);
       } else {
         throw error;
       }

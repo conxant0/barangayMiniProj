@@ -48,7 +48,7 @@ async function insertBarangays(barangayCollection, allBarangays) {
       });
     } catch (error) {
       if (error.code === 11000) {
-        console.log(`Duplicates found in ${currentParentId}.`);
+        console.log(`Duplicates found in parentId ${currentParentId}.`);
       } else {
         throw error;
       }
