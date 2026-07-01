@@ -11,37 +11,46 @@ const ws = fs.createWriteStream("barangay.csv");
 const csvStream = format({ headers: true });
 csvStream.pipe(ws);
 
+let completedSuccessfully = false;
+
+ws.on("finish", () => {
+  if (completedSuccessfully) {
+    console.log("Completed Barangay Crawl!");
+  }
+});
+
 axios
   .get(urlBarangay)
   .then((response) => {
     const apiError = response.data.error;
 
-    if (apiError === "No cluster options found.") {
+    if (apiError) {
+      throw new Error(apiError);
+    }
+
+    const barangays = response.data.data.map((name, index) => ({
+      id: index + 1,
+      name,
+      parentId: municipality,
+    }));
+
+    barangays.forEach((barangay) => {
+      csvStream.write(barangay);
+    });
+
+    completedSuccessfully = true;
+    csvStream.end();
+  })
+  .catch((error) => {
+    if (error.message === "No cluster options found.") {
       console.error("Invalid province");
-      csvStream.end();
     } else if (
-      apiError === "No sub options found for the specified category."
+      error.message === "No sub options found for the specified category."
     ) {
       console.error(
         "No barangay options found for this province/municipality.",
       );
-      csvStream.end();
-    } else {
-      const barangays = response.data.data.map((name, index) => ({
-        id: index + 1,
-        name,
-        parentId: municipality,
-      }));
-
-      barangays.forEach((barangay) => {
-        csvStream.write(barangay);
-      });
-
-      csvStream.end();
-    }
-  })
-  .catch((error) => {
-    if (error.response) {
+    } else if (error.response) {
       console.error("Request failed:", error.response.status);
       console.error(error.response.data);
     } else {
