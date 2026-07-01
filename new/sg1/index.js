@@ -41,7 +41,9 @@ async function main() {
 
         const docs = barangays.map((barangay) => ({
           id: id++,
-          name: barangay,
+          province,
+          municipality,
+          barangay,
           parentId,
         }));
 

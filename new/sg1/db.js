@@ -4,7 +4,7 @@ async function createBarangayIndex(barangayCollection) {
   await barangayCollection.createIndex(
     {
       parentId: 1,
-      name: 1,
+      barangay: 1,
     },
     {
       unique: true,
