@@ -34,6 +34,7 @@ async function main() {
     const db = await connectToDB();
     const barangayCollection = db.collection("barangaysSG1");
     const province = "Rizal";
+    const allBarangays = [];
 
     await barangayCollection.createIndex(
       {
@@ -49,7 +50,7 @@ async function main() {
     if (!municipalities) {
       console.error("Invalid Province");
     } else {
-      let skipped = [];
+      const skipped = [];
 
       let id = 1;
 
@@ -62,15 +63,45 @@ async function main() {
           parentId: municipality,
         }));
 
-        try {
-          if (docs.length > 0) {
-            await barangayCollection.insertMany(docs, {
+        allBarangays.push(...docs);
+      }
+
+      let currentParentId = null;
+      let currentBatch = [];
+
+      for (const barangay of allBarangays) {
+        if (currentParentId === null) {
+          currentParentId = barangay.parentId;
+        }
+
+        if (barangay.parentId !== currentParentId) {
+          try {
+            await barangayCollection.insertMany(currentBatch, {
               ordered: false,
             });
+          } catch (error) {
+            if (error.code === 11000) {
+              console.log(`Duplicates found in ${currentParentId}.`);
+            } else {
+              throw error;
+            }
           }
+
+          currentBatch = [];
+          currentParentId = barangay.parentId;
+        }
+
+        currentBatch.push(barangay);
+      }
+
+      if (currentBatch.length > 0) {
+        try {
+          await barangayCollection.insertMany(currentBatch, {
+            ordered: false,
+          });
         } catch (error) {
           if (error.code === 11000) {
-            console.log(`Duplicates found in ${municipality}.`);
+            console.log(`Duplicates found in ${currentParentId}.`);
           } else {
             throw error;
           }

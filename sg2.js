@@ -42,6 +42,7 @@ async function main() {
   try {
     const db = await connectToDB();
     const barangayCollection = db.collection("barangaySG2");
+    const allBarangays = [];
 
     await barangayCollection.createIndex(
       {
@@ -53,7 +54,7 @@ async function main() {
       },
     );
 
-    let skipped = [];
+    const skipped = [];
 
     let id = 1;
 
@@ -70,21 +71,54 @@ async function main() {
           parentId: `${province}/${municipality}`,
         }));
 
+        allBarangays.push(...docs);
+      }
+    }
+
+    let currentParentId = null;
+    let currentBatch = [];
+
+    for (const barangay of allBarangays) {
+      if (currentParentId === null) {
+        currentParentId = barangay.parentId;
+      }
+
+      if (barangay.parentId !== currentParentId) {
         try {
-          if (docs.length > 0) {
-            await barangayCollection.insertMany(docs, {
-              ordered: false,
-            });
-          }
+          await barangayCollection.insertMany(currentBatch, {
+            ordered: false,
+          });
         } catch (error) {
           if (error.code === 11000) {
+            const municipality = currentParentId.split("/").pop();
             console.log(`Duplicates found in ${municipality}.`);
           } else {
             throw error;
           }
         }
+
+        currentBatch = [];
+        currentParentId = barangay.parentId;
+      }
+
+      currentBatch.push(barangay);
+    }
+
+    if (currentBatch.length > 0) {
+      try {
+        await barangayCollection.insertMany(currentBatch, {
+          ordered: false,
+        });
+      } catch (error) {
+        if (error.code === 11000) {
+          const municipality = currentParentId.split("/").pop();
+          console.log(`Duplicates found in ${municipality}.`);
+        } else {
+          throw error;
+        }
       }
     }
+
     console.log("Skipped locations: ", skipped);
 
     console.log("Completed Barangay Crawl!");

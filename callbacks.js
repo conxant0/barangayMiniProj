@@ -30,12 +30,21 @@ const req = https.get(urlBarangay, (res) => {
         "No barangay options found for this province/municipality.",
       );
     } else {
+      const allBarangays = [];
       const barangays = parsedData.data.map((name, index) => ({
         id: index + 1,
         name: name,
         parentId: municipality,
       }));
-      console.log("Output:", barangays);
+
+      allBarangays.push(...barangays);
+
+      const outputBarangays = [];
+      for (const barangay of allBarangays) {
+        outputBarangays.push(barangay);
+      }
+
+      console.log("Output:", outputBarangays);
     }
   });
 });

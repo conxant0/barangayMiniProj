@@ -28,15 +28,18 @@ axios
       throw new Error(apiError);
     }
 
+    const allBarangays = [];
     const barangays = response.data.data.map((name, index) => ({
       id: index + 1,
       name,
       parentId: municipality,
     }));
 
-    barangays.forEach((barangay) => {
+    allBarangays.push(...barangays);
+
+    for (const barangay of allBarangays) {
       csvStream.write(barangay);
-    });
+    }
 
     completedSuccessfully = true;
     csvStream.end();
